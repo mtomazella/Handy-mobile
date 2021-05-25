@@ -28,7 +28,7 @@ const percentageToImageMap = {
 }
 
 const BatteryDisplay = props => {
-    const percentage = props.percentage | 82;
+    const percentage = props.percentage | 25;
     const batteryImage  = percentageToImageMap[determineClosestImage( percentage )];
     return ( 
         <BatteryDisplayView>

@@ -7,7 +7,8 @@
     "ios": "react-native run-ios",
     "start": "react-native start",
     "test": "jest",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "adb": "adb -s 1637ae14 reverse tcp:8081 tcp:8081"
   },
   "dependencies": {
     "@react-native-community/masked-view": "^0.1.11",
@@ -15,6 +16,7 @@
     "@react-navigation/native": "^5.9.4",
     "react": "17.0.1",
     "react-native": "0.64.1",
+    "react-native-ble-manager": "^7.5.0",
     "react-native-gesture-handler": "^1.10.3",
     "react-native-paper": "^4.8.1",
     "react-native-reanimated": "^2.1.0",
