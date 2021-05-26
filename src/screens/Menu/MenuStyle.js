@@ -31,3 +31,8 @@ export const DrawerOptions = styled.View`
 export const Options = styled(Drawer.Item)`
     padding-left: 10%;
 `;
+
+export const Hr = styled.View`
+    border: #eeeeee 1px solid;
+    margin: 20px 0 20px 0;
+`;

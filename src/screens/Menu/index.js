@@ -1,5 +1,5 @@
 import React from 'react';
-import { Overlay, LogoSection, Logo, DrawerOptions, Options } from './MenuStyle';
+import { Overlay, LogoSection, Logo, DrawerOptions, Options, Hr } from './MenuStyle';
 
 import handyLogo from './img/handyLogo.png';
 
@@ -18,6 +18,14 @@ const Menu = props => {
                     style={{ fontSize: 50 }}
                     label="Modes"
                     onPress={() => props.navigation.navigate('Modes')}
+                />
+
+                {/* Debug */}
+                <Hr />
+                <Options
+                    style={{ fontSize: 50 }}
+                    label="BleController"
+                    onPress={() => props.navigation.navigate('BleController')}
                 />
             </DrawerOptions>
         </Overlay>
