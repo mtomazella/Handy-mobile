@@ -1,5 +1,7 @@
+/* eslint-disable prettier/prettier */
 import globalVariables from '../../global_variables.json';
 import BluetoothManager from './BluetoothManager';
+import HandData from './HandData';
 
 class HandControl {
     constructor ( ) {
@@ -7,7 +9,12 @@ class HandControl {
     }
 
     getState ( ) {
-        return this.control.read( globalVariables.FULLSTATE_SERVICE_UUID,globalVariables.FULLSTATE_CHAR_UUID );
+        return new Promise( async (resolve, reject) => {
+            this.control.read( globalVariables.FULLSTATE_SERVICE_UUID,globalVariables.FULLSTATE_CHAR_UUID )
+            .then( data => {
+                resolve( new HandData( data ) );
+            } )
+        } )
     }
 
     toggleState ( ) {

@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react';
+/* eslint-disable prettier/prettier */
+import React, { useEffect, useState } from 'react';
 
 import { State, 
          StateAttribute, 
@@ -10,12 +11,24 @@ import HandControl from './../../components/HandControl/HandControl';
 
 const handControl = new HandControl( );
 
-const Home = props => {    
+const BleController = props => {
+    const [batteryLevel, setBatteryLevel] = useState('');
+    
+    // useEffect(() => {
+    //     setInterval( async () => {
+    //         handControl.getState()
+    //         .then( data => {
+    //             const newState = data.getBattery();
+    //             if ( newState != batteryLevel ) setBatteryLevel( newState );
+    //         } )
+    //     }, handControl.control.intervalDelay );        
+    // }, [batteryLevel]);
+    
     return (
         <Background>
             <State>
-                <StateAttribute> Battery: {props.battery_level} </StateAttribute>
-                <StateAttribute> State:   {props.state}         </StateAttribute>
+                <StateAttribute> Battery: {batteryLevel} </StateAttribute>
+                {/* <StateAttribute> State:   {state}         </StateAttribute> */}
             </State>
             <ButtonView>
                 <StyledButton mode="contained">
@@ -32,4 +45,4 @@ const Home = props => {
     )
 }
 
-export default Home;
+export default BleController;
