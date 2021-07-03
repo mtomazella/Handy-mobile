@@ -1,70 +1,179 @@
 /* eslint-disable prettier/prettier */
-import globalVariables      from '../../global_variables.json';
+import { NativeEventEmitter, 
+         NativeModules }    from 'react-native';
 import BleManager           from 'react-native-ble-manager';
-import { stringToBytes }     from 'convert-string';
+import { stringToBytes }    from 'convert-string';
+
+import globalVariables      from '../../global_variables.json';
 import { askForPermition, 
          bleBinToString }   from './helper';
+import Alert                from '../Alert';
 
-import alert from '../Alert';
+const BleManagerModule = NativeModules.BleManager;
+const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
 
 class BluetoothManager {
-    isConnectedAssumption = false;
-    intervalDelay = 5000;
-
+    fatalError = false;
+    connected = false;
+    handFound = false;
+    servicesRetrieved = false;
+    
     constructor ( ) {
-        BleManager.start({ showAlert: false });
-        askForPermition();
-        this.connect();
-        this.retrieveServices();
+        askForPermition()
+        .then( permission => {
+            if ( !permission ) { this.fatalError = true; console.error( "Permission Denied" ); return; }
+            BleManager.start()
+            .then( ( ) => {
+                this.initListenners();
+                this.startConnectionRoutine();
+            } )
+            .catch( ( error ) => {
+                this.fatalError = true;
+                console.error( error );
+            } )
+        } )
     }
-
+    
     treatError ( error ) {
         if ( error == "Device is not connected" ) {
-            console.log( "An error occured while connecting to device: " + error );
-            this.isConnectedAssumption = false;
-            this.intervalDelay = 5000;
-            alert( 'Falha ao se conectar com a prótese. Tenha certeza que ela está ligada.' );
+            console.info( error );
+            this.reconnect();
         }
-        else console.log( error );
-        
-        this.reconnect();
+        else if ( error.includes( "Characteristic" ) && error.includes( "not found" ) ) {
+            console.info( "Characteristic not found" );
+            this.reconnect();
+        }
+        else if ( error == "Read failed" ) {
+            console.info( error );
+            this.reconnect();
+        }
+        //else console.info( error );
+    }
+     
+        /* Connection Routine */
+    connectInterval;
+    startConnectionRoutine ( ) {
+        this.connectInterval = setInterval( ( ) => {
+            if ( !this.connected ) this.connect( );
+            else this.stopConnectionRoutine();
+        }, 6000 )
     }
 
-    isConnected ( ) {
-        return BleManager.isPeripheralConnected( globalVariables.DEVICE_UUID )
-        .catch( error => { console.log( "Could not resolve if device is connected: " + error ) } );
+    stopConnectionRoutine ( ) {
+        clearInterval( this.connectInterval );
+        this.connectInterval = null;
     }
     
     connect ( ) {
-        BleManager.connect( globalVariables.DEVICE_UUID )
-        .then( ( ) => { this.isConnectedAssumption = true; this.intervalDelay = 2000; } )
-        .catch( ( error ) => { this.treatError( error ); } );
+        this.searchForHand( );
+        const interval = setInterval( ( ) => {
+            if ( this.handFound ) {
+                BleManager.connect( globalVariables.DEVICE_UUID )
+                .then( ( ) => {
+                    this.connected = true;
+                    console.log( "Connected" )
+                    new Alert( "Conectado" )
+                    this.retrieveServices();
+                } )
+                .catch( error => { this.treatError( error ) } )
+                clearInterval( interval );
+            }
+        }, 100 ); 
+    }
+
+    disconnect ( ) {
+        BleManager.disconnect( globalVariables.DEVICE_UUID )
+        .catch( this.treatError )
     }
 
     reconnect ( ) {
-        this.connect();
-        this.retrieveServices()
+        this.disconnect();
+        this.startConnectionRoutine()
     }
     
     retrieveServices ( ) {
-        return BleManager.retrieveServices( globalVariables.DEVICE_UUID )
-        .catch( error => { this.treatError( error ); } )
+        BleManager.retrieveServices( globalVariables.DEVICE_UUID )
+        .then( ( ) => { 
+            this.servicesRetrieved = true; 
+            console.log( "Services Retrieved" ); 
+        } )
+        .catch( ( error ) => { 
+            this.servicesRetrieved = false; 
+            this.treatError( error );
+        } )
+    }
+    
+    treatConnectionBeforeCommand ( ) {
+        if ( !this.connected ) {
+            // new Alert( "Falha na conexão." );
+            if ( this.connectInterval === null ) this.startConnectionRoutine();
+        }
     }
 
-    read ( serviceId, charId ) {
-        return new Promise ( ( resolve, reject ) => {
-            BleManager.read( globalVariables.DEVICE_UUID, serviceId, charId )
-            .then ( ( result ) => {
-                resolve( bleBinToString( result ) );
-            } )
-            .catch( error => { reject(error) } );
+        /* Event Handling */
+    eventCallbacks = {
+        DiscoverPeripheral: ( device ) => {
+            // console.log( "Discovered Peripheral: " + device.id );
+        },
+        StopScan: ( ) => { console.info( "Scan Stop" ); },
+        DisconnectedPeripheral: ( device ) => { 
+            console.log( "Device disconnected: " + device );
+            if ( device.id == globalVariables.DEVICE_UUID ) { 
+                this.connected = false; 
+                this.servicesRetrieved = false;
+            }
+        },
+        DidUpdateValueForCharacteristic: ()=>{}
+    }
+    setCallbackForEvent ( event, callback ) { this.eventCallbacks[event] = callback; }
+    initListenners ( ) {
+        this.destroyListenners();
+        Object.keys( this.eventCallbacks ).forEach( event => {
+            bleManagerEmitter.addListener( "BleManager"+event, this.eventCallbacks[event], this );
         } )
-        .catch( error => { this.treatError( error ) } );
+    }
+    destroyListenners ( ) {
+        Object.keys( this.eventCallbacks ).forEach( event => {
+            bleManagerEmitter.removeAllListeners( "BleManager"+event );
+        } )
+    }
+    
+        /* Scanning */
+    scan ( seconds ) {
+        BleManager.scan( [], seconds, false )
+        .then( ( ) => { console.info("Scanning"); } )
+        .catch( ( ) => { console.warn( "Scan failed" ) } )
+    }
+
+    searchForHand ( ) {
+        this.handFound = false;
+        const handler = ( device ) => {
+            if ( device.id == globalVariables.DEVICE_UUID ) this.handFound = true;
+        }
+        bleManagerEmitter.addListener( "BleManagerDiscoverPeripheral", handler );
+        this.scan( 3 );
+        setTimeout( ( ) => {
+            bleManagerEmitter.removeListener( "BleManagerDiscoverPeripheral", handler );
+            // console.log( `Hand${ (this.handFound)?"":" not" } found` )
+        }, 3000 );
+    }
+    
+
+        /* I/O */
+    read ( serviceId, charId ) {
+        this.treatConnectionBeforeCommand();
+        return new Promise( ( resolve, reject ) => {
+            BleManager.read( globalVariables.DEVICE_UUID, serviceId, charId )
+            .then( data => {
+                console.info( `Read: ${bleBinToString( data )}` );
+                resolve( bleBinToString( data ) )
+            } )
+            .catch( ( error ) => { this.treatError( error ); } )
+        } )
     }
 
     write ( serviceId, charId, data ) {
-        BleManager.writeWithoutResponse( globalVariables.DEVICE_UUID, serviceId, charId, stringToBytes( data ) )
-        .catch( error => { this.treatError( error ) } );
+
     }
 }
 

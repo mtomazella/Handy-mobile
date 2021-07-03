@@ -1,35 +1,45 @@
 /* eslint-disable prettier/prettier */
 import React, {useEffect, useState} from 'react';
+import { Icon } from 'react-native-elements';
 
 import BatteryDisplay from './../../components/BatteryDisplay/BatteryDisplay';
+import MenuButton from './../../components/MenuButton';
 
-import { Background } from './HomeStyle';
+import { Background, 
+         NotConnectedView,
+         NotConnectedText } from './HomeStyle';
 
 import HandControl from './../../components/HandControl/HandControl'
+import DatabaseManager from './../../components/Database/DatabaseManager';
+
+const db = new DatabaseManager();
 
 const handControl = new HandControl();
 
-function getBateryLevel ( ) {
-    
-}
-
-const Home = props => {    
+const Home = ({ navigation }) => {    
     const [batteryLevel, setBatteryLevel] = useState('');
+    const [connected, setConnected] = useState(false);
     
     useEffect(() => {
-        setInterval( async () => {
+        const interval = setInterval( async () => {
+            if ( handControl.control.connected != connected ) setConnected(handControl.control.connected);
             handControl.getState()
-            .then( data => {
-                const newState = data.getBattery();
-                if ( newState != batteryLevel ) setBatteryLevel( newState );
+            .then( ( data ) => {
+                if ( !data ) return;
+                setBatteryLevel( data.getBattery() )
+                clearInterval( interval );
             } )
-            .catch( console.log )
-        }, handControl.control.intervalDelay );        
+        }, 5000 );        
     }, [batteryLevel]);
 
     return (
         <Background>
+            <MenuButton navigation={navigation} top={120}/>
             <BatteryDisplay percentage={batteryLevel} />
+            <NotConnectedView style={{display:(!connected)?"flex":"none"}}>
+                <Icon type="feather" name="alert-circle" color="red" />
+                <NotConnectedText> Não Conectado! </NotConnectedText>
+            </NotConnectedView>
         </Background> 
     )
 }
