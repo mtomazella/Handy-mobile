@@ -6,6 +6,7 @@ import { Icon, Button } from 'react-native-elements'
 import MenuButton from './../../components/MenuButton'
 import Database from './../../components/Database/DatabaseManager';
 const db = new Database();
+import handControl from './../../components/HandControl/HandControl'
 
 import ModeList from './components/ModeList';
 import ModeListItem from './components/ModeListItem'
@@ -14,14 +15,19 @@ import { TitleView,
          ButtonsView,
          Main } from './style';
 
-
 const Modes = ({ navigation, route }) => {
     const [ modes, setModes ] = useState( [] );
     const [ editingActives, setEditing ] = useState( false );
+    const [forceUpdateValue, setForceUpdate] = useState(0);
+    const [ changedModes, setChanged ] = useState([]);
+
+    function forceUpdate(){
+        setForceUpdate(forceUpdateValue + 1);
+    }
 
     function fetch ( ) {
         db.fetchModes()
-        .then( dbModes => { setModes( dbModes ); console.log(dbModes) } )
+        .then( dbModes => { setModes( dbModes ); /*console.log(dbModes)*/ } )
     }
 
     useEffect( () => {
@@ -29,8 +35,6 @@ const Modes = ({ navigation, route }) => {
     }, [ ] )
 
     if ( route && route.params && route.params.update ) { fetch(); route.params.update = false }
-
-    const changedModes = [  ];
 
     return (
         <Main>
@@ -52,15 +56,17 @@ const Modes = ({ navigation, route }) => {
                                 name={data.name}
                                 id={data.id}
                                 key={index}
-                                active={data.active}
+                                active={(data.active==1)?true:false}
                                 mode={data}
                                 onPress={()=>{
                                     if ( !editingActives ) 
                                         navigation.navigate("Edit", { id: data.id, update: true })
                                     else {
-                                        modes[index].active = !data.active;
+                                        modes[index].active = (!data.active)?1:0;
                                         if ( changedModes.indexOf( index ) == -1 )
-                                            changedModes.push(index);
+                                            changedModes.push(modes[index]);
+                                        forceUpdate();
+                                        //console.log(changedModes);
                                     }
                                 }}
                             />
@@ -99,7 +105,15 @@ const Modes = ({ navigation, route }) => {
                         buttonStyle={{
                             width:"90%",
                             backgroundColor:"#F7C59F"
-                        }}/>
+                        }}
+                        onPress={ () => {
+                            setEditing(false);
+                            changedModes.forEach( mode => {
+                                db.addMode(mode);
+                            } )
+                            handControl.fetchAndWriteModes();
+                            setChanged( [] );
+                        } } />
                 <Button title="Cancelar" 
                         buttonStyle={{
                             width:"89%",

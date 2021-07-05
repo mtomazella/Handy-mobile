@@ -11,7 +11,6 @@ export default class {
         return this;
     }
     initFromDb ( dbData ) {
-        console.log(dbData)
         if ( !dbData ) return this;
         this.id = dbData.id;
         this.name = dbData.name;
@@ -30,6 +29,9 @@ export default class {
     }
     generateDatabaseQuery ( ) {
         return `INSERT OR REPLACE INTO modes VALUES ( ${(this.id!=undefined)?this.id:null}, "${this.name}", "${this.getStateString(false)}", "${this.getStateString(true)}", ${(this.active)?1:0} );`
+    }
+    generateBleString ( ) {
+        return `${this.name};${this.getStateString(false)};${this.getStateString(true)}`;
     }
 
     parseDbState ( state ) {

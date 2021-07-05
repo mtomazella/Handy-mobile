@@ -9,12 +9,11 @@ import { Background,
          NotConnectedView,
          NotConnectedText } from './HomeStyle';
 
-import HandControl from './../../components/HandControl/HandControl'
 import DatabaseManager from './../../components/Database/DatabaseManager';
+import handControl from './../../components/HandControl/HandControl'
 
 const db = new DatabaseManager();
 
-const handControl = new HandControl();
 
 const Home = ({ navigation }) => {    
     const [batteryLevel, setBatteryLevel] = useState('');

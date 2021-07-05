@@ -24,7 +24,7 @@ const Alert = props => {
                       size={30}
                 />
             </View>
-            <Dialog.Input onChangeText={inputValidCaracters} value={inputValue} style={{textAlign:"center"}}/>
+            <Dialog.Input onChangeText={inputValidCaracters} value={inputValue} style={{textAlign:"center"}} keyboardType="numeric"/>
             <Dialog.Button style={{color:"#F7C59F"}} label="Cancelar" onPress={()=>{props.setVisible(false);setInputValue( "" )}}/>
             <Dialog.Button style={{color:"#F7C59F"}} label="Salvar" 
                 onPress={()=>{

@@ -15,7 +15,7 @@ export default class {
             .then( result => {
                 const modes = [ ];
                 for ( i = 0; result.rows.item(i) != null; i++ )
-                    modes.push( result.rows.item(i) );
+                    modes.push( new Mode().initFromDb( result.rows.item(i) ) );
                 resolve( modes );
             } )
             .catch( reject )

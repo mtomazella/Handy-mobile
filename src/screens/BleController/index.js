@@ -7,9 +7,7 @@ import { State,
          StyledButton, 
          ButtonView } from "./style";
 
-import HandControl from './../../components/HandControl/HandControl';
-
-const handControl = new HandControl( );
+import handControl from './../../components/HandControl/HandControl'
 
 const BleController = props => {
     const [batteryLevel, setBatteryLevel] = useState('');

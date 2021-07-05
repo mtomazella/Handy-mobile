@@ -39,7 +39,7 @@ class BluetoothManager {
             console.info( error );
             this.reconnect();
         }
-        else if ( error.includes( "Characteristic" ) && error.includes( "not found" ) ) {
+        else if ( error.includes && error.includes( "Characteristic" ) && error.includes( "not found" ) ) {
             console.info( "Characteristic not found" );
             this.reconnect();
         }
@@ -47,7 +47,7 @@ class BluetoothManager {
             console.info( error );
             this.reconnect();
         }
-        //else console.info( error );
+        else console.info( error );
     }
      
         /* Connection Routine */
@@ -172,8 +172,16 @@ class BluetoothManager {
         } )
     }
 
+    getByteArrayMaxSize ( ) {
+        return globalVariables.MODE_COUNT * ( globalVariables.MAX_NAME_SIZE + ( 12 * globalVariables.FINGER_COUNT) + 2 );
+    }
     write ( serviceId, charId, data ) {
-
+        this.treatConnectionBeforeCommand();
+        return new Promise( ( resolve, reject ) => {
+            BleManager.write( globalVariables.DEVICE_UUID, serviceId, charId, stringToBytes(data), this.getByteArrayMaxSize() )
+            .then( console.log )
+            .catch( ( error ) => { this.treatError( error ); reject(error); } )
+        } )
     }
 }
 

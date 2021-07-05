@@ -17,52 +17,6 @@ import { Main,
          ConfigLabelContainer,
          ConfigLabel }     from './style'
 
-const Labels = props => {
-    return (
-        <ConfigLabelsView>
-            <ConfigLabelContainer style={{width:"15%"}}>
-                <ConfigLabel> Número </ConfigLabel>
-            </ConfigLabelContainer>
-            <ConfigLabelContainer>
-                <ConfigLabel> Ângulo </ConfigLabel>
-            </ConfigLabelContainer>
-            <ConfigLabelContainer>
-                <ConfigLabel> Início (ms) </ConfigLabel>
-            </ConfigLabelContainer>
-            <ConfigLabelContainer>
-                <ConfigLabel> Duração (ms) </ConfigLabel>
-            </ConfigLabelContainer>
-        </ConfigLabelsView>
-    )
-}
-
-const TabButton = props => {
-    return (
-        <Button 
-            icon={
-                <Icon 
-                    type="feather"
-                    name={ props.iconName }
-                    color="#888888"
-                    containerStyle={{
-                        paddingRight:10
-                    }}
-                />
-            }
-            title={props.title}
-            titleStyle={{
-                color:"#888888"
-            }}
-            buttonStyle={{
-                width:"95%",
-                padding:10
-            }}
-            type="clear"
-            onPress={ props.onPress }
-        />
-    )
-}
-
 const EditMode = ({ navigation, route }) => {
     const id = route.params.id|undefined;
     const db = new Database();
@@ -226,6 +180,54 @@ const EditMode = ({ navigation, route }) => {
 }
 
 export default EditMode
+
+/* ----------------- */
+
+const Labels = props => {
+    return (
+        <ConfigLabelsView>
+            <ConfigLabelContainer style={{width:"15%"}}>
+                <ConfigLabel> Número </ConfigLabel>
+            </ConfigLabelContainer>
+            <ConfigLabelContainer>
+                <ConfigLabel> Ângulo </ConfigLabel>
+            </ConfigLabelContainer>
+            <ConfigLabelContainer>
+                <ConfigLabel> Início (ms) </ConfigLabel>
+            </ConfigLabelContainer>
+            <ConfigLabelContainer>
+                <ConfigLabel> Duração (ms) </ConfigLabel>
+            </ConfigLabelContainer>
+        </ConfigLabelsView>
+    )
+}
+
+const TabButton = props => {
+    return (
+        <Button 
+            icon={
+                <Icon 
+                    type="feather"
+                    name={ props.iconName }
+                    color="#888888"
+                    containerStyle={{
+                        paddingRight:10
+                    }}
+                />
+            }
+            title={props.title}
+            titleStyle={{
+                color:"#888888"
+            }}
+            buttonStyle={{
+                width:"95%",
+                padding:10
+            }}
+            type="clear"
+            onPress={ props.onPress }
+        />
+    )
+}
 
 function genState ( angle ) {
     return {

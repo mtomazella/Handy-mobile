@@ -1,10 +1,13 @@
 /* eslint-disable prettier/prettier */
-import globalVariables from '../../global_variables.json';
+import globalVariables  from '../../global_variables.json';
 import BluetoothManager from './BluetoothManager';
-import HandData from './HandData';
-import Alert from './../Alert';
+import HandData         from './HandData';
+import Database         from './../Database/DatabaseManager'
+import Alert            from './../Alert';
 
 import { ToastAndroid } from 'react-native';
+
+const db = new Database();
 
 class HandControl {
     constructor ( ) {
@@ -45,9 +48,18 @@ class HandControl {
         } )
     }
 
-    writeModes ( ) {
-        // TODO
+    fetchAndWriteModes ( ) {
+        db.fetchModes()
+        .then( modes => {
+            const activeModes = modes.filter( mode => ( mode.active ) );
+            const toSend = activeModes.map( mode => ( mode.generateBleString() ) ).join("|");
+            this.control.write( globalVariables.GETTER_SERVICE_UUID, globalVariables.MODE_CHAR_UUID, toSend )
+        } )
+        .catch( error => {
+            new Alert( "Falha ao enviar modos." )
+            console.error( error )
+        } )
     }
 }
 
-export default HandControl;
+export default new HandControl();
