@@ -1,6 +1,7 @@
 import sql from 'react-native-sqlite-storage';
 
-import { Tables } from './Schema';
+import globalVariables from './../../global_variables.json'
+import { Tables, ConfigKeys } from './Schema';
 
 export default class {
     constructor ( ) {
@@ -40,9 +41,22 @@ export default class {
 
             this.execute( query );
         });
+
+        this.initConfigTable()
     }
 
-    execute ( query ) {
+    initConfigTable () {
+        ConfigKeys.forEach( key => {
+            this.fetch( `SELECT * FROM config WHERE key = "${key}";` )
+            .then( result => {
+                if ( result.rows.length < 1 ) {
+                    this.execute( `INSERT INTO config VALUES ( "${key}", "${globalVariables[key]}" );`, true)
+                }
+            } )
+        } )
+    }
+
+    execute ( query, ignoreError = false ) {
         this.open()
         .then( db => {
             db.transaction( (tx) => {
@@ -50,11 +64,10 @@ export default class {
                 .then(([tx, results]) => {
                     //console.log(results)
                 })
-                .catch( console.error )
             } )
         } )
         .catch( err => {
-            console.error( err )
+            if ( !ignoreError ) console.error( err );
         } )
     }
 

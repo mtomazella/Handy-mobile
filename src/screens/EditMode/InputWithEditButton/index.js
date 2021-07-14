@@ -1,11 +1,25 @@
 import React, { useState } from 'react'
+import { Keyboard } from 'react-native';
 import { Icon, Input } from 'react-native-elements'
 
 const InputWithEditButton = props => {
     const [ text, setText ] = useState( props.name );
     const [ open, setOpen ] = useState(false);
     const [ iconName, setIconName ] = useState("edit-3")
+    
+    function iconOnPress ( ) {
+        setOpen( !open );
+        setIconName( (!open)?"check":"edit-3" );
+        props.setName( text );
+    }
+    function save ( ) {
+        setOpen(false);
+        setIconName("edit-3")
+        props.setName( text );
+    }
 
+    Keyboard.addListener( 'keyboardDidHide', save );
+    
     return (
         <Input
             rightIcon={
@@ -17,11 +31,7 @@ const InputWithEditButton = props => {
                     containerStyle={{
                         paddingRight:10
                     }}
-                    onPress={ () => {
-                        setOpen( !open );
-                        setIconName( (!open)?"check":"edit-3" );
-                        props.setName( text );
-                    } }
+                    onPress={iconOnPress}
                 />
             }  
             containerStyle={{

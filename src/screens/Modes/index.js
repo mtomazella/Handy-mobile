@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import faker from 'faker'
-import { View } from 'react-native';
+
+import { View }         from 'react-native';
 import { Icon, Button } from 'react-native-elements'
 
-import MenuButton from './../../components/MenuButton'
-import Database from './../../components/Database/DatabaseManager';
-const db = new Database();
-import handControl from './../../components/HandControl/HandControl'
+import MenuButton   from './../../components/MenuButton'
+import Toast        from './../../components/Alert'
+import db           from './../../components/Database/DatabaseManager';
+import handControl  from './../../components/HandControl/HandControl'
+import config       from './../../components/Config'
 
 import ModeList from './components/ModeList';
 import ModeListItem from './components/ModeListItem'
@@ -28,6 +29,10 @@ const Modes = ({ navigation, route }) => {
     function fetch ( ) {
         db.fetchModes()
         .then( dbModes => { setModes( dbModes ); /*console.log(dbModes)*/ } )
+    }
+
+    function canSelectMoreModes ( ) {
+        return modes.filter( mode => ( mode.active == 1 ) ).length < config.MODE_COUNT;
     }
 
     useEffect( () => {
@@ -62,11 +67,14 @@ const Modes = ({ navigation, route }) => {
                                     if ( !editingActives ) 
                                         navigation.navigate("Edit", { id: data.id, update: true })
                                     else {
-                                        modes[index].active = (!data.active)?1:0;
-                                        if ( changedModes.indexOf( index ) == -1 )
-                                            changedModes.push(modes[index]);
-                                        forceUpdate();
-                                        //console.log(changedModes);
+                                        if ( canSelectMoreModes() || data.active ) {
+                                            modes[index].active = (!data.active)?1:0;
+                                            if ( changedModes.indexOf( modes[index] ) == -1 )
+                                                changedModes.push(modes[index]);
+                                            forceUpdate();
+                                        } else {
+                                            new Toast( "O número máximo de modos foi atingido." );
+                                        }
                                     }
                                 }}
                             />

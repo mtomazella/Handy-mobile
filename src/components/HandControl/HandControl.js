@@ -1,24 +1,30 @@
 /* eslint-disable prettier/prettier */
-import globalVariables  from '../../global_variables.json';
 import BluetoothManager from './BluetoothManager';
 import HandData         from './HandData';
-import Database         from './../Database/DatabaseManager'
 import Alert            from './../Alert';
 
 import { ToastAndroid } from 'react-native';
 
-const db = new Database();
+import db from './../Database/DatabaseManager'
+import config from './../../components/Config'
 
 class HandControl {
+    lastState = new HandData(); 
+
     constructor ( ) {
         this.control = new BluetoothManager( );
+        setInterval( () => {
+            this.getState();
+        }, 10000 )
     }
 
     getState ( ) {
         return new Promise( ( resolve, reject ) => {
-            this.control.read( globalVariables.FULLSTATE_SERVICE_UUID, globalVariables.FULLSTATE_CHAR_UUID )
+            this.control.read( config.FULLSTATE_SERVICE_UUID, config.FULLSTATE_CHAR_UUID )
             .then( ( data ) => {
-                resolve( new HandData( data ) )
+                this.lastState = new HandData( data );
+                this.control.evSys.triggerEvent( 'fetchState', this.lastState );
+                resolve( this.lastState )
             } )
         } )
         .catch( ( error ) => {
@@ -28,8 +34,8 @@ class HandControl {
     }
 
     toggleState ( ) {
-        this.control.read( globalVariables.GETTER_SERVICE_UUID, globalVariables.STATE_CHAR_UUID )
-        .then( ( ) => { console.log( "State toggle" ) } )
+        this.control.read( config.GETTER_SERVICE_UUID, config.STATE_CHAR_UUID )
+        .then( ( ) => { console.log( "State toggle" ); this.getState() } )
         .catch( ( error ) => {
             new Alert( "Falha ao alterar estado" );
             console.warn( "Toggle state error: " + error );
@@ -37,11 +43,12 @@ class HandControl {
     }
 
     writeState ( state ) {
+        // TODO
     }
 
     toggleMode ( ) {
-        this.control.read( globalVariables.GETTER_SERVICE_UUID, globalVariables.MODE_CHAR_UUID )
-        .then( ( ) => { console.log( "Mode toggle" ) } )
+        this.control.read(config.GETTER_SERVICE_UUID,config.MODE_CHAR_UUID )
+        .then( ( ) => { console.log( "Mode toggle" ); this.getState() } )
         .catch( ( error ) => {
             new Alert( "Falha ao alterar modo" );
             console.warn( "Toggle mode error: " + error );
@@ -53,12 +60,17 @@ class HandControl {
         .then( modes => {
             const activeModes = modes.filter( mode => ( mode.active ) );
             const toSend = activeModes.map( mode => ( mode.generateBleString() ) ).join("|");
-            this.control.write( globalVariables.GETTER_SERVICE_UUID, globalVariables.MODE_CHAR_UUID, toSend )
+            this.control.write( config.GETTER_SERVICE_UUID, config.MODE_CHAR_UUID, toSend )
         } )
         .catch( error => {
             new Alert( "Falha ao enviar modos." )
             console.error( error )
         } )
+    }
+
+        /* Event system */
+    addListener ( event, callback ) {
+        this.control.evSys.addListener( event, callback );
     }
 }
 

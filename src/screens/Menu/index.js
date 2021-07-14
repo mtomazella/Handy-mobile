@@ -1,5 +1,13 @@
 import React from 'react';
-import { Overlay, LogoSection, Logo, DrawerOptions, Options, Hr } from './MenuStyle';
+import globalVariables from './../../global_variables.json'
+import { Overlay, 
+         LogoSection, 
+         Logo, 
+         DrawerOptions, 
+         BottomOptions,
+         IconOption } from './MenuStyle';
+
+import { Linking } from 'react-native';
 
 import handyLogo from './img/handyLogo.png';
 
@@ -10,23 +18,34 @@ const Menu = props => {
                 <Logo source={handyLogo} />
             </LogoSection>
             <DrawerOptions>
-                <Options
-                    label="Home"
+                <IconOption
+                    label="Início"
                     onPress={() => props.navigation.navigate('Home')} 
+                    iconName="home"
                 />
-                <Options
-                    style={{ fontSize: 50 }}
-                    label="Modes"
+                <IconOption
+                    label="Modos"
                     onPress={() => props.navigation.navigate('Modes')}
+                    iconName="sliders"
+                />
+                <IconOption
+                    label="Controle"
+                    onPress={() => props.navigation.navigate('Control')}
+                    iconName="radio"
                 />
 
-                {/* Debug */}
-                <Hr />
-                <Options
-                    style={{ fontSize: 50 }}
-                    label="BleController"
-                    onPress={() => props.navigation.navigate('BleController')}
-                />
+                <BottomOptions>
+                    <IconOption 
+                        iconSize={26} 
+                        iconName="settings" 
+                        onPress={ () => props.navigation.navigate('Config') }
+                    />
+                    <IconOption 
+                        iconSize={26} 
+                        iconName="help-circle" 
+                        onPress={ () => Linking.openURL( globalVariables.SITE_URL ) }
+                    />
+                </BottomOptions>
             </DrawerOptions>
         </Overlay>
     )

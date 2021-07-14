@@ -4,41 +4,28 @@ import { Icon } from 'react-native-elements';
 
 import BatteryDisplay from './../../components/BatteryDisplay/BatteryDisplay';
 import MenuButton from './../../components/MenuButton';
+import NotConnectedMessage from '../../components/NotConnectedMessage';
 
-import { Background, 
-         NotConnectedView,
-         NotConnectedText } from './HomeStyle';
+import { Background } from './HomeStyle';
 
-import DatabaseManager from './../../components/Database/DatabaseManager';
 import handControl from './../../components/HandControl/HandControl'
-
-const db = new DatabaseManager();
-
+import db from './../../components/Database/DatabaseManager'
 
 const Home = ({ navigation }) => {    
     const [batteryLevel, setBatteryLevel] = useState('');
     const [connected, setConnected] = useState(false);
+    const [ bluetooth, setBluetooth ] = useState( !handControl.control.bluetoothOff );
     
-    useEffect(() => {
-        const interval = setInterval( async () => {
-            if ( handControl.control.connected != connected ) setConnected(handControl.control.connected);
-            handControl.getState()
-            .then( ( data ) => {
-                if ( !data ) return;
-                setBatteryLevel( data.getBattery() )
-                clearInterval( interval );
-            } )
-        }, 5000 );        
-    }, [batteryLevel]);
+    handControl.addListener( 'connect',    () => { setConnected( true  ) } );
+    handControl.addListener( 'disconnect', () => { setConnected( false ) } );
+    handControl.addListener( 'fetchState',     ( state ) => { setBatteryLevel( state.getBattery() ) } ) ;
+    handControl.addListener( 'bluetoothOnOff', ( state ) => { setBluetooth( state ) } );
 
     return (
         <Background>
             <MenuButton navigation={navigation} top={120}/>
             <BatteryDisplay percentage={batteryLevel} />
-            <NotConnectedView style={{display:(!connected)?"flex":"none"}}>
-                <Icon type="feather" name="alert-circle" color="red" />
-                <NotConnectedText> Não Conectado! </NotConnectedText>
-            </NotConnectedView>
+            <NotConnectedMessage connected={connected} bluetooth={bluetooth} />
         </Background> 
     )
 }

@@ -7,5 +7,6 @@
     "STATE_CHAR_UUID":        "1dd38a1b-8c4c-4c8d-997e-e7da2d91f8b6",
     "FINGER_COUNT":           5,
     "MAX_NAME_SIZE":          50,
-    "MODE_COUNT":             3
+    "MODE_COUNT":             3,
+    "SITE_URL":               "https://protesehandy.herokuapp.com"
 }

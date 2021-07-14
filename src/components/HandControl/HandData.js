@@ -1,8 +1,14 @@
 /* eslint-disable prettier/prettier */
 export default class HandData {
     uData;
-    _data = { };
+    _data = { 
+        battery_level:  0,
+        state:          0,
+        mode_index:     0,
+        mode_name:      "Desconhecido"
+    };
     constructor ( data ) {
+        if ( !data ) return;
         this.uData = data;
         this.parse(data);
     }
@@ -22,6 +28,10 @@ export default class HandData {
     }
 
     getState ( ) {
-        return this._data.state;
+        return (this._data.state == 1)?true:false;
+    }
+
+    getModeName ( ) {
+        return this._data["mode_name"];
     }
 }

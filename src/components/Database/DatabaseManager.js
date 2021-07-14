@@ -2,12 +2,13 @@ import Database from './Database'
 
 import generateMode from './../Debug/modeFactory'
 import Mode from '../HandControl/Mode';
-import { baseProps } from 'react-native-gesture-handler/lib/typescript/handlers/gestureHandlers';
 
-export default class {
+class DatabaseManager {
     constructor ( ) {
         this.db = new Database();
     }
+
+        /* Modes */
 
     fetchModes ( ) {
         return new Promise ( ( resolve, reject ) => {
@@ -39,4 +40,27 @@ export default class {
     deleteMode ( id ) {
         this.db.execute( `DELETE FROM modes WHERE id = ${id};` );
     }
+
+        /* Config */
+
+    fetchConfig () {
+        return new Promise ( ( resolve, reject ) => {
+            this.db.fetch( 'SELECT * FROM config;' )
+            .then( result => {
+                const configObj = {};
+                for ( i = 0; result.rows.item(i) != null; i++ ) {
+                    const item = result.rows.item(i);
+                    configObj[item.key] = item.value;
+                }
+                resolve( configObj );
+            } )
+            .catch( reject );
+        } )
+    }
+
+    saveConfig ( key, value ) {
+        return this.db.fetch( `INSERT OR REPLACE INTO config VALUES ( "${key}", "${value}" );` )
+    }
 }
+
+export default new DatabaseManager();

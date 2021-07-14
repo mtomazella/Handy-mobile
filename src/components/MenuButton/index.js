@@ -7,7 +7,7 @@ const MenuButton = props => {
         <View style={{
             position:"absolute",
             left:0,
-            top:props.top
+            top:props.top,
         }}>
             <Button 
                 type="clear"

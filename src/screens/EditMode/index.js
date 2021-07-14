@@ -7,7 +7,6 @@ import { Icon }                from 'react-native-elements/dist/icons/Icon';
 import DialogInput         from './Dialog/Input'
 import DialogDelete        from './Dialog/Delete'
 import Mode                from './../../components/HandControl/Mode'
-import Database            from './../../components/Database/DatabaseManager'
 import InputWithEditButton from './InputWithEditButton'
 import ConfigItem          from './ConfigItem'
 import { Main, 
@@ -17,9 +16,10 @@ import { Main,
          ConfigLabelContainer,
          ConfigLabel }     from './style'
 
+import db from './../../components/Database/DatabaseManager'
+
 const EditMode = ({ navigation, route }) => {
     const id = route.params.id|undefined;
-    const db = new Database();
 
     const [ tab1, setTab ]          = useState( true );
     const [ mode, setMode ]         = useState( new Mode() );

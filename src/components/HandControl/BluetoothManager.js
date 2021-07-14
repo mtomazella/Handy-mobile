@@ -8,6 +8,11 @@ import globalVariables      from '../../global_variables.json';
 import { askForPermition, 
          bleBinToString }   from './helper';
 import Alert                from '../Alert';
+import EventSystem          from './EventSystem';
+import BluetoothState   from 'react-native-bluetooth-state-manager'
+import BluetoothAlert   from './BluetoothDisabledDialog';
+
+import config from './../Config';
 
 const BleManagerModule = NativeModules.BleManager;
 const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
@@ -16,7 +21,11 @@ class BluetoothManager {
     fatalError = false;
     connected = false;
     handFound = false;
+    bluetoothOff = true;
     servicesRetrieved = false;
+    userDoesntWantBl = false;
+
+    evSys = new EventSystem();
     
     constructor ( ) {
         askForPermition()
@@ -25,7 +34,8 @@ class BluetoothManager {
             BleManager.start()
             .then( ( ) => {
                 this.initListenners();
-                this.startConnectionRoutine();
+                //this.startConnectionRoutine();
+                this.treatBluetoothDisabled( true );
             } )
             .catch( ( error ) => {
                 this.fatalError = true;
@@ -68,9 +78,10 @@ class BluetoothManager {
         this.searchForHand( );
         const interval = setInterval( ( ) => {
             if ( this.handFound ) {
-                BleManager.connect( globalVariables.DEVICE_UUID )
+                BleManager.connect( config.DEVICE_UUID )
                 .then( ( ) => {
                     this.connected = true;
+                    this.evSys.triggerEvent( 'connect' )
                     console.log( "Connected" )
                     new Alert( "Conectado" )
                     this.retrieveServices();
@@ -82,8 +93,10 @@ class BluetoothManager {
     }
 
     disconnect ( ) {
-        BleManager.disconnect( globalVariables.DEVICE_UUID )
+        BleManager.disconnect( config.DEVICE_UUID )
         .catch( this.treatError )
+        this.connected = false;
+        this.evSys.triggerEvent( 'disconnect' );
     }
 
     reconnect ( ) {
@@ -92,7 +105,7 @@ class BluetoothManager {
     }
     
     retrieveServices ( ) {
-        BleManager.retrieveServices( globalVariables.DEVICE_UUID )
+        BleManager.retrieveServices( config.DEVICE_UUID )
         .then( ( ) => { 
             this.servicesRetrieved = true; 
             console.log( "Services Retrieved" ); 
@@ -103,7 +116,24 @@ class BluetoothManager {
         } )
     }
     
-    treatConnectionBeforeCommand ( ) {
+    treatBluetoothDisabled ( isGetState = false ) {
+        if ( isGetState ) {
+            if ( this.userDoesntWantBl ) return;
+            else this.userDoesntWantBl = true;
+        }
+        BluetoothState.getState()
+        .then( state => { if ( state != "PoweredOn" ) { 
+            BluetoothAlert(); 
+            this.bluetoothOff = true; 
+            this.evSys.triggerEvent("bluetoothOnOff", false) 
+        } else { 
+            this.bluetoothOff = false;
+            this.evSys.triggerEvent("bluetoothOnOff", true)
+        } } )
+        .catch( error => { console.warn( "Failed to read Bluetooth state." ) } );
+    }
+    treatConnectionBeforeCommand ( isGetState = false ) {
+        this.treatBluetoothDisabled( isGetState );
         if ( !this.connected ) {
             // new Alert( "Falha na conexão." );
             if ( this.connectInterval === null ) this.startConnectionRoutine();
@@ -118,7 +148,7 @@ class BluetoothManager {
         StopScan: ( ) => { console.info( "Scan Stop" ); },
         DisconnectedPeripheral: ( device ) => { 
             console.log( "Device disconnected: " + device );
-            if ( device.id == globalVariables.DEVICE_UUID ) { 
+            if ( device.id == config.DEVICE_UUID ) { 
                 this.connected = false; 
                 this.servicesRetrieved = false;
             }
@@ -131,10 +161,20 @@ class BluetoothManager {
         Object.keys( this.eventCallbacks ).forEach( event => {
             bleManagerEmitter.addListener( "BleManager"+event, this.eventCallbacks[event], this );
         } )
+        this.initEventSystemTriggers();
     }
     destroyListenners ( ) {
         Object.keys( this.eventCallbacks ).forEach( event => {
             bleManagerEmitter.removeAllListeners( "BleManager"+event );
+        } )
+    }
+    initEventSystemTriggers () {
+        bleManagerEmitter.addListener( "BleManagerDisconnectedPeripheral", ( device ) =>{
+            if ( device.id == config.DEVICE_UUID ) { 
+                this.connected = false; 
+                this.servicesRetrieved = false;
+                this.evSys.triggerEvent( 'disconnect' );
+            }
         } )
     }
     
@@ -148,7 +188,7 @@ class BluetoothManager {
     searchForHand ( ) {
         this.handFound = false;
         const handler = ( device ) => {
-            if ( device.id == globalVariables.DEVICE_UUID ) this.handFound = true;
+            if ( device.id == config.DEVICE_UUID ) this.handFound = true;
         }
         bleManagerEmitter.addListener( "BleManagerDiscoverPeripheral", handler );
         this.scan( 3 );
@@ -161,9 +201,9 @@ class BluetoothManager {
 
         /* I/O */
     read ( serviceId, charId ) {
-        this.treatConnectionBeforeCommand();
+        this.treatConnectionBeforeCommand( (charId == config.FULLSTATE_CHAR_UUID) );
         return new Promise( ( resolve, reject ) => {
-            BleManager.read( globalVariables.DEVICE_UUID, serviceId, charId )
+            BleManager.read( config.DEVICE_UUID, serviceId, charId )
             .then( data => {
                 console.info( `Read: ${bleBinToString( data )}` );
                 resolve( bleBinToString( data ) )
@@ -173,12 +213,12 @@ class BluetoothManager {
     }
 
     getByteArrayMaxSize ( ) {
-        return globalVariables.MODE_COUNT * ( globalVariables.MAX_NAME_SIZE + ( 12 * globalVariables.FINGER_COUNT) + 2 );
+        return config.MODE_COUNT * ( globalVariables.MAX_NAME_SIZE + ( 12 * config.FINGER_COUNT) + 2 );
     }
     write ( serviceId, charId, data ) {
-        this.treatConnectionBeforeCommand();
+        this.treatConnectionBeforeCommand( );
         return new Promise( ( resolve, reject ) => {
-            BleManager.write( globalVariables.DEVICE_UUID, serviceId, charId, stringToBytes(data), this.getByteArrayMaxSize() )
+            BleManager.write( config.DEVICE_UUID, serviceId, charId, stringToBytes(data), this.getByteArrayMaxSize() )
             .then( console.log )
             .catch( ( error ) => { this.treatError( error ); reject(error); } )
         } )
