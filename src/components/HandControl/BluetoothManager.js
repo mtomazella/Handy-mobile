@@ -34,13 +34,16 @@ class BluetoothManager {
             BleManager.start()
             .then( ( ) => {
                 this.initListenners();
-                //this.startConnectionRoutine();
+                this.startConnectionRoutine();
                 this.treatBluetoothDisabled( true );
             } )
             .catch( ( error ) => {
                 this.fatalError = true;
                 console.error( error );
             } )
+        } )
+        .catch( ( ) => {
+            new Alert( "Falha ao confirmar permissões." );
         } )
     }
     
@@ -55,7 +58,7 @@ class BluetoothManager {
         }
         else if ( error == "Read failed" ) {
             console.info( error );
-            this.reconnect();
+            // this.reconnect();
         }
         else console.info( error );
     }
@@ -117,12 +120,12 @@ class BluetoothManager {
     }
     
     treatBluetoothDisabled ( isGetState = false ) {
-        if ( isGetState ) {
-            if ( this.userDoesntWantBl ) return;
-            else this.userDoesntWantBl = true;
-        }
         BluetoothState.getState()
         .then( state => { if ( state != "PoweredOn" ) { 
+            if ( isGetState ) {
+                if ( this.userDoesntWantBl ) return;
+                else this.userDoesntWantBl = true;
+            }
             BluetoothAlert(); 
             this.bluetoothOff = true; 
             this.evSys.triggerEvent("bluetoothOnOff", false) 
@@ -130,7 +133,7 @@ class BluetoothManager {
             this.bluetoothOff = false;
             this.evSys.triggerEvent("bluetoothOnOff", true)
         } } )
-        .catch( error => { console.warn( "Failed to read Bluetooth state." ) } );
+        .catch( error => { console.info( "Failed to read Bluetooth state." ) } );
     }
     treatConnectionBeforeCommand ( isGetState = false ) {
         this.treatBluetoothDisabled( isGetState );
@@ -208,7 +211,7 @@ class BluetoothManager {
                 console.info( `Read: ${bleBinToString( data )}` );
                 resolve( bleBinToString( data ) )
             } )
-            .catch( ( error ) => { this.treatError( error ); } )
+            .catch( ( error ) => { this.treatError( error ); reject(error); } )
         } )
     }
 
@@ -218,8 +221,9 @@ class BluetoothManager {
     write ( serviceId, charId, data ) {
         this.treatConnectionBeforeCommand( );
         return new Promise( ( resolve, reject ) => {
-            BleManager.write( config.DEVICE_UUID, serviceId, charId, stringToBytes(data), this.getByteArrayMaxSize() )
-            .then( console.log )
+            console.log(data)
+            BleManager.write( config.DEVICE_UUID, serviceId, charId, stringToBytes(data), 200 )
+            // .then( console.log )
             .catch( ( error ) => { this.treatError( error ); reject(error); } )
         } )
     }

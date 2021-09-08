@@ -26,9 +26,10 @@ class HandControl {
                 this.control.evSys.triggerEvent( 'fetchState', this.lastState );
                 resolve( this.lastState )
             } )
+            .catch(err => {console.info(err);}) // Esse catch pode quebrar alguma coisa, cuidado
         } )
         .catch( ( error ) => {
-            console.error( error );
+            // console.error( error );
             new Alert( "Falha ao receber dados.", ToastAndroid.SHORT );
         } )
     }
@@ -38,7 +39,7 @@ class HandControl {
         .then( ( ) => { console.log( "State toggle" ); this.getState() } )
         .catch( ( error ) => {
             new Alert( "Falha ao alterar estado" );
-            console.warn( "Toggle state error: " + error );
+            console.info( "Toggle state error: " + error );
         } )
     }
 
@@ -50,8 +51,8 @@ class HandControl {
         this.control.read(config.GETTER_SERVICE_UUID,config.MODE_CHAR_UUID )
         .then( ( ) => { console.log( "Mode toggle" ); this.getState() } )
         .catch( ( error ) => {
-            new Alert( "Falha ao alterar modo" );
-            console.warn( "Toggle mode error: " + error );
+            new Alert( "Falha ao alterar modo." );
+            console.info( "Toggle mode error: " + error );
         } )
     }
 
@@ -59,8 +60,12 @@ class HandControl {
         db.fetchModes()
         .then( modes => {
             const activeModes = modes.filter( mode => ( mode.active ) );
-            const toSend = activeModes.map( mode => ( mode.generateBleString() ) ).join("|");
+            const toSend = activeModes.map( mode => mode.generateBleString() ).join("|")+"#";
             this.control.write( config.GETTER_SERVICE_UUID, config.MODE_CHAR_UUID, toSend )
+            .catch( error => {
+                new Alert( "Falha ao enviar modos." );
+                console.info( error );
+            } )
         } )
         .catch( error => {
             new Alert( "Falha ao enviar modos." )

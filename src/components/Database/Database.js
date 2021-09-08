@@ -49,8 +49,8 @@ export default class {
         ConfigKeys.forEach( key => {
             this.fetch( `SELECT * FROM config WHERE key = "${key}";` )
             .then( result => {
-                if ( result.rows.length < 1 ) {
-                    this.execute( `INSERT INTO config VALUES ( "${key}", "${globalVariables[key]}" );`, true)
+                if ( !result.rows.length || result.rows.length < 1 ) {
+                    this.execute( `INSERT OR REPLACE INTO config VALUES ( "${key}", "${globalVariables[key]}" );`, true)
                 }
             } )
         } )

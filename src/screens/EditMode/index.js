@@ -16,6 +16,7 @@ import { Main,
          ConfigLabelContainer,
          ConfigLabel }     from './style'
 
+import config from './../../components/Config'
 import db from './../../components/Database/DatabaseManager'
 
 const EditMode = ({ navigation, route }) => {
@@ -247,7 +248,7 @@ function getDefaultMode ( ) {
         },
         active: false
     }
-    for ( i = 0; i < 5; i++ ) {
+    for ( i = 0; i < config.FINGER_COUNT; i++ ) {
         obj.states.open[i] = genState(0);
         obj.states.closed[i] = genState(180);
     }
