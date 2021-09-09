@@ -42,7 +42,7 @@ export default class {
             this.execute( query );
         });
 
-        this.initConfigTable()
+        this.initConfigTable();
     }
 
     initConfigTable () {

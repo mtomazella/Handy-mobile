@@ -47,6 +47,7 @@ class BluetoothManager {
         } )
     }
     
+    readFailedCount = 0;
     treatError ( error ) {
         if ( error == "Device is not connected" ) {
             console.info( error );
@@ -58,7 +59,11 @@ class BluetoothManager {
         }
         else if ( error == "Read failed" ) {
             console.info( error );
-            // this.reconnect();
+            this.readFailedCount++;
+            if ( this.readFailedCount > 5 && this.connected ){
+                this.reconnect();
+                this.readFailedCount = 0;
+            }
         }
         else console.info( error );
     }
@@ -146,7 +151,7 @@ class BluetoothManager {
         /* Event Handling */
     eventCallbacks = {
         DiscoverPeripheral: ( device ) => {
-            // console.log( "Discovered Peripheral: " + device.id );
+            console.log( "Discovered Peripheral: " + device.id );
         },
         StopScan: ( ) => { console.info( "Scan Stop" ); },
         DisconnectedPeripheral: ( device ) => { 

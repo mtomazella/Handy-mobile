@@ -1,0 +1,12 @@
+{
+    "DEVICE_UUID":            "9C:9C:1F:CA:23:72",
+    "FULLSTATE_SERVICE_UUID": "2d0ec625-d550-4ed3-8068-def71c9aa7ee",
+    "GETTER_SERVICE_UUID":    "662cfb42-f43c-469a-bedd-1b13b8d7ec28",
+    "FULLSTATE_CHAR_UUID":    "6e8e098a-b4ca-4b28-ba66-afb65f4c83e1",
+    "MODE_CHAR_UUID":         "f0003b89-4239-40a8-bcf1-bd60699d6179",
+    "STATE_CHAR_UUID":        "1dd38a1b-8c4c-4c8d-997e-e7da2d91f8b6",
+    "FINGER_COUNT":           5,
+    "MAX_NAME_SIZE":          50,
+    "MODE_COUNT":             3,
+    "SITE_URL":               "https://protesehandy.herokuapp.com"
+}
